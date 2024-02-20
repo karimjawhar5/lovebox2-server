@@ -16,6 +16,7 @@ import array
 cred_json = os.environ.get("FIREBASE_CREDENTIALS")
 cred_dict = json.loads(cred_json)
 
+
 # Use the dictionary to initialize the credentials
 cred = credentials.Certificate(cred_dict)
 firebase_admin.initialize_app(cred)
