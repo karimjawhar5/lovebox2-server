@@ -126,7 +126,7 @@ def get_new_message():
         cached_message_data = new_message
         
         text_data = new_message["text_data"]
-        image_data = new_message["text_data"]
+        image_data = new_message["image_data"]
 
         new_message_status = False
 
@@ -144,11 +144,11 @@ def get_latest_message_index():
     global new_message_status, cached_message_data
     latest_message = get_most_recent_love_message()
     if(latest_message):
+        cached_message_data = latest_message
         index = latest_message["index"]
         return jsonify({'status': True, 'data':{'index':index}})
     else:
         return jsonify({'status': False, 'data':{'index':-1}})
-
 
 #Endpoint: returns message at given index status
 @app.route('/get_index_message/<int:message_index>', methods=['GET'])
