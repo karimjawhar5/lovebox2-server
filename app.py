@@ -26,7 +26,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Collection references
-meta_data_ref = db.collection('metaData').document('yourMetaDataDocId')
+meta_data_ref = db.collection('metaData').document('0libFv0CftMCABavcQ6i')
 messages_ref = db.collection('messages')
 
 def getNextMessageIndex():
