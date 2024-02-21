@@ -123,12 +123,12 @@ def get_new_message():
 
     if(new_message_status):
         new_message = get_most_recent_love_message()
-        cached_message_data = new_message
+        with lock:
+            cached_message_data = new_message
+            new_message_status = False
         
         text_data = new_message["text_data"]
         image_data = new_message["image_data"]
-
-        new_message_status = False
 
         if(image_data):
             return jsonify({'status': True, 'data':{'text':text_data,'image':True}})
@@ -144,7 +144,8 @@ def get_latest_message_index():
     global new_message_status, cached_message_data
     latest_message = get_most_recent_love_message()
     if(latest_message):
-        cached_message_data = latest_message
+        with lock:
+            cached_message_data = latest_message
         index = latest_message["index"]
         return jsonify({'status': True, 'data':{'index':index}})
     else:
@@ -158,7 +159,8 @@ def get_index_message(message_index):
     message = get_love_message_by_index(message_index)
 
     if(message):
-        cached_message_data = message
+        with lock:
+            cached_message_data = message
         
         text_data = message["text_data"]
         image_data = message["text_data"]
@@ -176,7 +178,7 @@ def get_index_message(message_index):
 @app.route('/get_image_data', methods=['GET'])
 def get_image_data():
     global cached_message_data
-
+    
     message = cached_message_data
 
     if(message):
