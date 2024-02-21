@@ -15,7 +15,6 @@ import array
 cred_json = os.environ.get("FIREBASE_CREDENTIALS")
 cred_dict = json.loads(cred_json)
 
-
 # Use the dictionary to initialize the credentials
 cred = credentials.Certificate(cred_dict)
 firebase_admin.initialize_app(cred)
@@ -30,14 +29,24 @@ meta_data_ref = db.collection('metaData').document('0libFv0CftMCABavcQ6i')
 messages_ref = db.collection('messages')
 
 def getNextMessageIndex():
-    latest_message_index = meta_data_ref.get().to_dict()['latestMessageIndex']
+    try:
+        # Try to get the latest message index
+        latest_message_index = meta_data_ref.get().to_dict()['latestIndex']
+    except KeyError:
+        # If latestIndex does not exist, initialize it with 0
+        latest_message_index = -1
+        meta_data_ref.set({'latestIndex': latest_message_index})
+
+    # Increment the index for the new message
     new_index = latest_message_index + 1
-    meta_data_ref.update({'latestMessageIndex': new_index})
+    # Update the latestIndex in the database
+    meta_data_ref.update({'latestIndex': new_index})
+
     return new_index
 
 def getLatestMessageIndex():
     # Retrieve the latest message index from Firestore without changing it
-    latest_message_index = meta_data_ref.get().to_dict()['latestMessageIndex']
+    latest_message_index = meta_data_ref.get().to_dict()['latestIndex']
     return latest_message_index
 
 def getNewMessageStatus():
@@ -47,7 +56,11 @@ def setNewMessageStatus(newStatus):
     meta_data_ref.update({'newMessageStatus': newStatus})
 
 def getMessageReadStatus():
-    return meta_data_ref.get().to_dict()['messageReadStatus']
+    try:
+        return meta_data_ref.get().to_dict()['messageReadStatus']
+    except KeyError:
+        meta_data_ref.set({'messageReadStatus': True})
+        return True
 
 def setMessageReadStatus(newStatus):
     meta_data_ref.update({'messageReadStatus': newStatus})
@@ -66,7 +79,7 @@ def SaveNewMessage(text_data, image_data):
     
     # Save the new message in the 'messages' collection with the next index
     messages_ref.add({
-        'Index': next_message_index,
+        'index': next_message_index,
         'text_data': text_data,
         'image_data': image_data
     })
@@ -77,7 +90,7 @@ def SaveNewMessage(text_data, image_data):
 
 def getLatestMessage():
     # Query the 'messages' collection to get the document with the greatest index
-    latest_message_query = messages_ref.order_by('Index', direction=firestore.Query.DESCENDING).limit(1)
+    latest_message_query = messages_ref.order_by('index', direction=firestore.Query.DESCENDING).limit(1)
     latest_message = latest_message_query.get()
     
     # Check if there are any messages
@@ -90,7 +103,7 @@ def getLatestMessage():
 
 def getMessageByIndex(index: int):
     # Query the 'messages' collection for a document with the specified index
-    message_query = messages_ref.where('Index', '==', index).limit(1)
+    message_query = messages_ref.where('index', '==', index).limit(1)
     message_docs = message_query.get()
     
     # Check if the message exists
